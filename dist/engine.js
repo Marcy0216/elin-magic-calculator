@@ -21,6 +21,31 @@
     for(let i=0;i<10;i++){const threshold=BigInt(400+i*100);if(n<=threshold)break;const before=Number(n);n=threshold+(n-threshold)*75n/100n;steps.push({threshold:Number(threshold),before,after:Number(n)});}
     return {value:Math.trunc(Math.fround(Number(n))),steps};
   }
+  function statusEffects(row,power,data){
+    const effects=[];
+    for(const ref of (row.textExtra_JP||'').split(',').filter(s=>s.startsWith('@'))){
+      const stat=data.stats?.find(s=>s.alias===ref.slice(1));if(!stat)continue;
+      if(stat.alias==='ConBuffStats'&&['8510','8710','6902'].includes(row.id)){
+        const p=row.id==='8710'?Math.abs(power):power;
+        if(p<0){effects.push({name:'速度',text:'このPowerでは計算できません'});continue;}
+        const sqrt=Math.fround(Math.sqrt(Math.fround(p)));
+        const amount=row.id==='6902'?100+Math.trunc(sqrt)*2:Math.trunc(Math.max(5,Math.fround(Math.fround(sqrt*1.5)+20)));
+        effects.push({name:'速度',value:amount*(row.id==='8710'?-1:1),unit:''});
+      }
+      const fields=stat.elements?stat.elements.split(','):[];
+      for(let i=0;i<fields.length;i+=2){
+        let alias=fields[i];const formula=fields[i+1];
+        if(alias==='ele')alias=row.aliasRef;
+        if(alias==='res')alias=data.statElements.find(e=>e.alias===row.aliasRef)?.aliasRef;
+        const element=data.statElements.find(e=>e.alias===alias);
+        const name=element?.name_JP||alias||fields[i];
+        if(formula.includes('p2')){effects.push({name,text:'魅力に依存（現在の入力では未算出）'});continue;}
+        effects.push({name,value:evaluate(formula,power,0),unit:element?.tag.split(',').includes('ratio')?'%':''});
+      }
+      if(stat.alias==='ConWeakness')effects.push({name:'DV・PV',text:'半減（50%）'});
+    }
+    return effects;
+  }
   function calculate(input,data){
     const row=data.elements.find(x=>x.id===String(input.spell));if(!row)throw Error('魔法を選択してください。');
     const level=integer(input.level,'魔法レベル'),attribute=integer(input.attribute,'主能力'),enhance=integer(input.enhance,'魔法強化'),anti=integer(input.anti,'反魔法');
@@ -33,9 +58,9 @@
     let dice=null;
     if(formula){const num=Math.max(1,evaluate(formula.num,power,e)),sides=Math.max(1,evaluate(formula.sides,power,e)),bonus=evaluate(formula.bonus,power,e);dice={num,sides,bonus,text:num+'d'+sides+(bonus>0?'+'+bonus:bonus<0?String(bonus):''),empty:!formula.num&&!formula.sides&&!formula.bonus};}
     if(dice&&!dice.empty){dice.min=(BigInt(dice.num)+BigInt(dice.bonus)).toString();dice.max=(BigInt(dice.num)*BigInt(dice.sides)+BigInt(dice.bonus)).toString();}
-    return {power,base,curved:curved.value,steps:curved.steps,factor,e,key,formula,dice};
+    return {power,base,curved:curved.value,steps:curved.steps,factor,e,key,formula,dice,statusEffects:statusEffects(row,power,data)};
   }
-  root.ElinEngine={calculate,evaluate,curve};
+  root.ElinEngine={calculate,evaluate,curve,statusEffects};
   if(typeof module!=='undefined')module.exports=root.ElinEngine;
 })(globalThis);
 
