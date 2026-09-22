@@ -3,15 +3,15 @@
   const spells=data.elements.filter(r=>['SPELL','ABILITY'].includes(r.group)&&r.category==='ability'&&r.aliasRef!=='mold'&&!r.proc.startsWith('Summon,'));
   function name(r){const ref=data.elements.find(e=>e.alias===r.aliasRef);return ref?ref.name_JP+'の'+r.name_JP:r.name_JP;}
   const normal=s=>s.normalize('NFKC').toLowerCase().replace(/[ァ-ヶ]/g,c=>String.fromCharCode(c.charCodeAt(0)-0x60));
-  let selected='50500';
-  let levelSpell='50500';const spellLevels={};
-  function search(){const query=normal($('search').value).trim().split(/\s+/).filter(Boolean),filter=$('kind').value;const matches=spells.filter(r=>(!filter||r.group===filter)&&query.every(q=>normal([name(r),r.name,r.alias,r.id,r.aliasParent].join(' ')).includes(q)));$('spell').replaceChildren(...matches.map(r=>{const o=document.createElement('option');o.value=r.id;o.textContent=name(r)+' ['+r.id+']';return o;}));$('searchCount').textContent=matches.length+' 件';if(matches.some(r=>r.id===selected))$('spell').value=selected;else if(matches.length)selected=$('spell').value;render();}
+  let selected='';
+  let levelSpell='';const spellLevels={};
+  function search(){const query=normal($('search').value).trim().split(/\s+/).filter(Boolean),filter=$('kind').value;const matches=spells.filter(r=>(!filter||r.group===filter)&&query.every(q=>normal([name(r),r.name,r.alias,r.id,r.aliasParent].join(' ')).includes(q)));$('spell').replaceChildren(...matches.map(r=>{const o=document.createElement('option');o.value=r.id;o.textContent=name(r)+' ['+r.id+']';return o;}));const placeholder=document.createElement('option');placeholder.value='';placeholder.textContent='魔法・アビリティを選択';$('spell').prepend(placeholder);$('searchCount').textContent=matches.length+' 件';if(matches.some(r=>r.id===selected))$('spell').value=selected;else if(query.length&&matches.length){selected=matches[0].id;$('spell').value=selected;}else{$('spell').value='';selected='';}render();}
   function addFeature(label,value){const div=document.createElement('div'),dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=label;dd.textContent=value;dd.className=['対応','適用','あり'].includes(value)?'positive':value==='未確認'?'unknown':'neutral';div.append(dt,dd);$('features').append(div);}
   const yes=v=>v===null||v===undefined?'未確認':v?'対応':'非対応';
   function render(){
     $('statusEffects').replaceChildren();$('statusPanel').hidden=true;
     $('diceRange').textContent='—';$('isAlly').disabled=$('isPC').value==='pc';if($('isAlly').disabled)$('isAlly').value='ally';
-    const r=spells.find(x=>x.id===$('spell').value);if(!r){$('output').hidden=true;$('error').hidden=false;$('error').textContent='該当する魔法・アビリティがありません。検索語を変えてください。';$('spellMeta').textContent='';return {error:'該当なし'};}
+    const r=spells.find(x=>x.id===$('spell').value);if(!r){const noMatches=$('spell').options.length===1;$('output').hidden=true;$('error').hidden=!noMatches;$('emptyResult').hidden=noMatches;$('error').textContent='該当する魔法・アビリティがありません。検索語を変えてください。';$('spellMeta').textContent='';return {error:noMatches?'該当なし':'未選択'};}$('emptyResult').hidden=true;
     selected=r.id;const parent=data.elements.find(x=>x.alias===r.aliasParent),t=traits[r.type]??{},kind=t.kind;
     let calcKey=r.alias;if(!data.calc.some(x=>x.id===calcKey)&&r.aliasRef)calcKey=r.alias.split('_')[0]+'_';
     const calc=data.calc.find(x=>x.id===calcKey);$('calcSource').textContent=calc?'Calc：'+calcKey:'対応するCalc行なし';
