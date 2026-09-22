@@ -22,7 +22,7 @@
     return {value:Math.trunc(Math.fround(Number(n))),steps};
   }
   function statusEffects(row,power,data,charisma,diva=0){
-    const effects=[];
+    const effects=[...(row.codeEffects||[])];
     const songRefs={6750:['StanceSongSleep'],6751:['StanceSongSleep'],6752:['StanceSongValor','ConSongValor'],6753:['StanceSongEnd'],6754:['StanceSongPebble','ConSongPebble']};
     const refs=(row.textExtra_JP||'').split(',').filter(s=>s.startsWith('@')).concat((songRefs[row.id]||[]).map(s=>'@'+s));
     for(const ref of refs){
