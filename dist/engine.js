@@ -15,13 +15,13 @@
     function sum(){let n=product();while(tokens[i]==='+'||tokens[i]==='-'){const op=tokens[i++],r=product();n=op==='+'?n+r:n-r;}return n;}
     const n=sum();if(i!==tokens.length||!Number.isFinite(n)||n>2147483647||n< -2147483648)throw Error('式の結果が計算可能範囲を超えました。');return Math.trunc(n);
   }
-  function curve(a){
-    const steps=[];if(a<=400)return {value:a,steps};
+  function curve(a,start=400,step=100,rate=75){
+    const steps=[];if(a<=start)return {value:a,steps};
     let n=BigInt(a);
-    for(let i=0;i<10;i++){const threshold=BigInt(400+i*100);if(n<=threshold)break;const before=Number(n);n=threshold+(n-threshold)*75n/100n;steps.push({threshold:Number(threshold),before,after:Number(n)});}
+    for(let i=0;i<10;i++){const threshold=BigInt(start+i*step);if(n<=threshold)break;const before=Number(n);n=threshold+(n-threshold)*BigInt(rate)/100n;steps.push({threshold:Number(threshold),before,after:Number(n)});}
     return {value:Math.trunc(Math.fround(Number(n))),steps};
   }
-  function statusEffects(row,power,data){
+  function statusEffects(row,power,data,charisma){
     const effects=[];
     for(const ref of (row.textExtra_JP||'').split(',').filter(s=>s.startsWith('@'))){
       const stat=data.stats?.find(s=>s.alias===ref.slice(1));if(!stat)continue;
@@ -39,8 +39,8 @@
         if(alias==='res')alias=data.statElements.find(e=>e.alias===row.aliasRef)?.aliasRef;
         const element=data.statElements.find(e=>e.alias===alias);
         const name=element?.name_JP||alias||fields[i];
-        if(formula.includes('p2')){effects.push({name,text:'魅力に依存（現在の入力では未算出）'});continue;}
-        effects.push({name,value:evaluate(formula,power,0),unit:element?.tag.split(',').includes('ratio')?'%':''});
+        if(formula.includes('p2')&&charisma===undefined){effects.push({name,text:'魅力に依存（現在の入力では未算出）'});continue;}
+        effects.push({name,value:evaluate(formula.replaceAll('p2',String(charisma??0)),power,0),unit:element?.tag.split(',').includes('ratio')?'%':''});
       }
       if(stat.alias==='ConWeakness')effects.push({name:'DV・PV',text:'半減（50%）'});
     }
@@ -51,14 +51,19 @@
     const level=integer(input.level,'魔法レベル'),attribute=integer(input.attribute,'主能力'),enhance=integer(input.enhance,'魔法強化'),anti=integer(input.anti,'反魔法');
     const kind=globalThis.ELIN_TRAITS?.[row.type]?.kind??'spell';
     const base=level*8+50,curved=curve(base),factor=kind==='ability'?100:Math.max(100+enhance-(kind==='breathe'?0:anti),1);
-    const power=Math.min(214748364,Number(BigInt(curved.value)*BigInt(factor)/100n));
+    let power=Math.min(214748364,Number(BigInt(curved.value)*BigInt(factor)/100n));
+    if(kind==='song'){
+      const music=integer(input.music??0,'演奏'),diva=integer(input.diva??0,'歌姫');
+      power=Math.min(214748364,Number(BigInt(curved.value)*BigInt(Math.max(100+Math.trunc(enhance/3),1))/100n*BigInt(Math.max(1,Math.min(300,50+curve(music,50,10,50).value*2)))/100n*BigInt(100+diva*20)/100n));
+    }
+    if(input.charisma!==undefined)integer(input.charisma,'魅力');
     let key=row.alias;if(!data.calc.some(x=>x.id===key)&&row.aliasRef)key=row.alias.split('_')[0]+'_';
     const formula=data.calc.find(x=>x.id===key);
     const e=row.aliasParent?attribute:0;
     let dice=null;
     if(formula){const num=Math.max(1,evaluate(formula.num,power,e)),sides=Math.max(1,evaluate(formula.sides,power,e)),bonus=evaluate(formula.bonus,power,e);dice={num,sides,bonus,text:num+'d'+sides+(bonus>0?'+'+bonus:bonus<0?String(bonus):''),empty:!formula.num&&!formula.sides&&!formula.bonus};}
     if(dice&&!dice.empty){dice.min=(BigInt(dice.num)+BigInt(dice.bonus)).toString();dice.max=(BigInt(dice.num)*BigInt(dice.sides)+BigInt(dice.bonus)).toString();}
-    return {power,base,curved:curved.value,steps:curved.steps,factor,e,key,formula,dice,statusEffects:statusEffects(row,power,data)};
+    return {power,base,curved:curved.value,steps:curved.steps,factor,e,key,formula,dice,statusEffects:statusEffects(row,power,data,input.charisma)};
   }
   root.ElinEngine={calculate,evaluate,curve,statusEffects};
   if(typeof module!=='undefined')module.exports=root.ElinEngine;

@@ -42,4 +42,10 @@ assert.equal(effects('8710',10,0,200)[0].value,-21);
 assert.deepEqual(effects('50500'),[]);
 for(const row of data.elements.filter(r=>r.category==='ability'))effects(row.id);
 console.log('Passed: status amounts, signed truncation, speed overrides, enhancement, anti-magic and every ability.');
+const songInput={spell:'6752',level:10,attribute:30,enhance:30,anti:999,music:50,diva:2};
+assert.equal(calculate(songInput,data).power,299);
+assert.equal(calculate({...songInput,diva:0},data).power,214);
+assert.equal(calculate({...songInput,anti:0},data).power,299);
+assert.equal(calculate({spell:'50800',level:10,attribute:30,enhance:0,anti:0,charisma:80},data).statusEffects[0].value,15);
+console.log('Passed: song performance/diva multipliers and charisma-based resistance.');
 
