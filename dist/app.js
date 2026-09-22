@@ -1,6 +1,6 @@
 (()=>{
   const data=globalThis.ELIN_DATA,engine=globalThis.ElinEngine,traits=globalThis.ELIN_TRAITS,$=id=>document.getElementById(id);
-  const spells=data.elements.filter(r=>['SPELL','ABILITY'].includes(r.group)&&r.category==='ability'&&r.aliasRef!=='mold'&&!r.proc.startsWith('Summon,'));
+  const spells=data.elements.filter(r=>['SPELL','ABILITY'].includes(r.group)&&r.category==='ability'&&r.aliasRef!=='mold'&&!r.proc.startsWith('Summon,')&&!['ActBit','ActFunnel'].includes(r.type));
   function name(r){const ref=data.elements.find(e=>e.alias===r.aliasRef);return ref?ref.name_JP+'の'+r.name_JP:r.name_JP;}
   const normal=s=>s.normalize('NFKC').toLowerCase().replace(/[ァ-ヶ]/g,c=>String.fromCharCode(c.charCodeAt(0)-0x60));
   let selected='';
