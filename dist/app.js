@@ -11,6 +11,9 @@
     $('diceRange').textContent='—';
     const r=spells.find(x=>x.id===$('spell').value);if(!r){$('output').hidden=true;$('error').hidden=false;$('error').textContent='該当する魔法・アビリティがありません。検索語を変えてください。';$('spellMeta').textContent='';return {error:'該当なし'};}
     selected=r.id;const parent=data.elements.find(x=>x.alias===r.aliasParent),t=traits[r.type]??{},kind=t.kind;
+    let calcKey=r.alias;if(!data.calc.some(x=>x.id===calcKey)&&r.aliasRef)calcKey=r.alias.split('_')[0]+'_';
+    const calc=data.calc.find(x=>x.id===calcKey);$('calcSource').textContent=calc?'Calc：'+calcKey:'対応するCalc行なし';
+    for(const key of ['num','sides','bonus'])$('calc-'+key).textContent=calc?(calc[key]||'空欄'):'—';
     $('spellMeta').textContent=r.alias+' / '+(parent?parent.name_JP:'対応主能力なし');$('attributeLabel').textContent=parent?parent.name_JP+'（補正後）':'主能力（未使用）';$('attribute').disabled=!r.aliasParent;
     $('levelLabel').textContent=(r.group==='SPELL'?'魔法':'アビリティ')+'レベル（補正後）';$('enhance').disabled=kind==='ability';$('anti').disabled=kind!=='spell';
     $('error').hidden=true;$('output').hidden=false;$('selectedName').textContent=name(r);$('effectDescription').textContent=r.detail_JP?.trim()||'この魔法・アビリティの効果説明は、ソースシートに登録されていません。';$('features').replaceChildren();
