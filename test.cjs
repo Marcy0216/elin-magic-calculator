@@ -1,0 +1,25 @@
+const assert=require('node:assert/strict');
+const {evaluate,curve,calculate}=require('./dist/engine.js');
+require('./dist/data.js');const data=globalThis.ELIN_DATA;
+require('./dist/traits.js');
+assert.equal(globalThis.ELIN_TRAITS.ActArrow.rapid,true);
+assert.equal(globalThis.ELIN_TRAITS.ActMissile.rapid,true);
+assert.equal(globalThis.ELIN_TRAITS.Spell.rapid,false);
+assert.equal(globalThis.ELIN_TRAITS.ActSword.rapid,null);
+assert.equal(calculate({spell:'50200',level:10,attribute:30,enhance:100,anti:200},data).power,260);
+assert.equal(calculate({spell:'6901',level:10,attribute:30,enhance:100,anti:200},data).power,130);
+assert.equal(evaluate('1+p/100+e/10',150,15),4);
+assert.equal(evaluate('-1-p/100',50,0),-1);
+assert.equal(evaluate('',10,10),0);
+assert.equal(evaluate('2+3*4',0,0),14);
+assert.equal(curve(400).value,400);assert.equal(curve(401).value,400);assert.equal(curve(600).value,537);
+let r=calculate({spell:'50500',level:10,attribute:30,enhance:0,anti:0},data);
+assert.equal(r.power,130);assert.equal(r.dice.text,'2d18+5');
+r=calculate({spell:'8400',level:10,attribute:30,enhance:0,anti:0},data);
+assert.equal(r.dice.text,'2d9+4');
+assert.equal(calculate({spell:'8400',level:10,attribute:30,enhance:0,anti:200},data).power,1);
+assert.throws(()=>evaluate('alert(1)',0,0));
+assert.throws(()=>calculate({spell:'8400',level:NaN,attribute:30,enhance:0,anti:0},data));
+for(const row of data.calc)for(const key of ['num','sides','bonus'])evaluate(row[key],1234,57);
+console.log('Passed: arithmetic, truncation, curve thresholds, spell lookup, healing, anti-magic, invalid inputs, all source formulas.');
+
