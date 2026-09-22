@@ -32,6 +32,7 @@
     const e=row.aliasParent?attribute:0;
     let dice=null;
     if(formula){const num=Math.max(1,evaluate(formula.num,power,e)),sides=Math.max(1,evaluate(formula.sides,power,e)),bonus=evaluate(formula.bonus,power,e);dice={num,sides,bonus,text:num+'d'+sides+(bonus>0?'+'+bonus:bonus<0?String(bonus):''),empty:!formula.num&&!formula.sides&&!formula.bonus};}
+    if(dice&&!dice.empty){dice.min=(BigInt(dice.num)+BigInt(dice.bonus)).toString();dice.max=(BigInt(dice.num)*BigInt(dice.sides)+BigInt(dice.bonus)).toString();}
     return {power,base,curved:curved.value,steps:curved.steps,factor,e,key,formula,dice};
   }
   root.ElinEngine={calculate,evaluate,curve};
