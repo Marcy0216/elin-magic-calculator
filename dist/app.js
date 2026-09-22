@@ -19,7 +19,7 @@
     $('spellMeta').textContent=r.alias+' / '+(parent?parent.name_JP:'対応主能力なし');$('attribute').value=$('stat-'+r.aliasParent)?.value??'0';$('attribute').disabled=!r.aliasParent;
     if(levelSpell!==r.id){if(!$('level').disabled)spellLevels[levelSpell]=$('level').value;$('level').value=spellLevels[r.id]??'10';levelSpell=r.id;}
     $('level').disabled=false;
-    $('levelHint').textContent='キャラクターレベルとは別に、魔法・アビリティごとの補正後レベルを入力してください。';
+    $('levelHint').textContent='選んだ魔法・アビリティの補正後レベルを入力。';
     $('error').hidden=true;$('output').hidden=false;$('selectedName').textContent=name(r);$('effectDescription').textContent=r.detail_JP?.trim()||'この魔法・アビリティの効果説明は、ソースシートに登録されていません。';$('features').replaceChildren();$('targetType').textContent=({Enemy:'敵',Chara:'キャラクター',Ground:'地面',Neighbor:'自分・隣接',Self:'自分',Select:'選択',Party:'パーティー',SelfParty:'自分・パーティー'})[r.target]||'任意';
     addFeature('連続魔法',yes(t.rapid));addFeature('長押しで反復',yes(t.repeat==='tag'?r.tag.split(',').includes('repeat'):t.repeat));addFeature('魔法強化',kind?kind==='spell'||kind==='breathe'||kind==='song'?'適用':'適用なし':'未確認');addFeature('反魔法による威力低下',kind?kind==='spell'?'あり':'なし':'未確認');addFeature('対応主能力',parent?.name_JP??'なし');addFeature('歌姫',kind==='song'?'適用':'適用なし');addFeature('連続魔法の設定',t.rapid?$('rapid').value:'対象外');
     $('featureNote').textContent=t.rapid?'連続魔法フィートがある場合に追加発動の対象になります。表示ダイスは1回分です。':'適用可否は発動に必要な条件を満たした場合のものです。';
@@ -28,7 +28,7 @@
   }
   function showStatusEffects(effects){
     $('statusPanel').hidden=!effects.length;
-    for(const effect of effects){const div=document.createElement('div'),dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=effect.name;dd.textContent=effect.text??((effect.value>=0?'+':'')+effect.value.toLocaleString('ja-JP')+effect.unit);div.append(dt,dd);$('statusEffects').append(div);}
+    for(const effect of effects){const div=document.createElement('div'),dt=document.createElement('dt'),dd=document.createElement('dd');div.className=effect.text?'effect-note':'effect-value';if(effect.name==='補足')div.classList.add('supplement');dt.textContent=effect.name;dd.textContent=effect.text??((effect.value>=0?'+':'')+effect.value.toLocaleString('ja-JP')+effect.unit);div.append(dt,dd);$('statusEffects').append(div);}
   }
   const profileIds=['isPC','isAlly','characterLevel','enhance','anti','music','diva','rapid',"stat-STR","stat-END","stat-DEX","stat-PER","stat-LER","stat-WIL","stat-MAG","stat-CHA","stat-LUC","stat-SPD"];
   try{const saved=JSON.parse(localStorage.getItem('elin-character-v1')||'{}');for(const id of profileIds)if(typeof saved[id]==='string')$(id).value=saved[id];}catch{}
